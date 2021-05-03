@@ -1,0 +1,81 @@
+/*
+ * Author: Francoise Zimmer
+ * description : Trigger handling class
+ * Handler Class containing the methods that will be called by the Trigger :
+ *  Trigger 1 before : Logical to calculate the net amount earned (without shipping costs) of the order.
+ *  Trigger 2 after : logical to update the chiffre d'affaire after receiving the new orders) on the concerned Accounts.
+ * 	Logique 3 : Logic to update all Accounts that have a command with status ordered.
+*/ 
+
+public class AP01Account { // handler du trigger Order
+    /**Updating the chiffre d'affaire of accounts that have received a new order.
+     * @param : orders. List of orders to be updated.
+     */
+    public static void updateChiffreAffaireDeL_Account(List<Order> orders) {
+        Set<Id> AccountOrderId = new Set<ID>();
+        for (order o : orders){
+            
+            // alimenter AccounterOrderId
+        }
+        // Creation of a new Map to collect the Id of the Account in Key and recover its chiffre d'affaire in Value.
+        Map<Id, Account> accMap = new Map<Id, Account>([SELECT id, Chiffre_d_affaire__c FROM Account where id in :AccountOrderId]);// where id in =: orders. ]); // ajouter une clause where
+        // Creation of a new list that will contain the Accounts that have placed a new order.
+        List<Account> accToUpdate = new List<Account>();
+        // Iterate over each sObject - here Order
+        
+        Map<id,Decimal> mapCA = new Map<id,Decimal>(); //where AccountID =: orderAccountId]);
+        
+        //for ([SELECT AccountId, SUM(TotalAmount)CA FROM Order])
+        
+        Set<Id> resultIds = (new Map<Id,SObject>(orders)).keySet();
+        AggregateResult[] groupedResults= [SELECT MIN(Accountid)Accid,SUM(TotalAmount)CA FROM Order where id in : resultIds] ;
+        for (AggregateResult a : groupedResults){
+            mapCA.put((id)a.get('Accid'),(Decimal)a.get('CA'));
+        }
+        
+        for (Order o:orders){ 
+            // for orders, whose Account Id is equal to the Order Id, recover the total amount of the order.
+                Id orderAccountId = o.AccountId;
+                Object sumOrder = mapCA.get(orderAccountId);//groupedResults[0].get('CA');
+                Account accountOrder = accMap.get(orderAccountId);
+                accountOrder.Chiffre_d_affaire__c = (Decimal) sumOrder;
+                accToUpdate.add(accountOrder);
+        }
+        // update of the chiffre d'affaire field for Accounts that have placed a new order.
+        update accToUpdate;
+ }
+    
+    public static void updateMontantCommandeSansFraisDeLivraison(List<Order> orders){
+        
+        // Iterate over each sObject - here Order
+        for (Order o:orders){
+            // calculate the net amount of the order (without shipping costs).
+                o.NetAmount__c = o.TotalAmount - o.ShipmentCost__c;
+           }     
+    }
+    
+    public static void updateChiffreAffaire(List<Account> accLst){
+        // creation of a new List of all Accounts.
+        List<Account> AllAccToUpdate = new List<Account>();
+        // creation of a new list of all orders with the status Ordered.
+       list<Order> listOrders =  [SELECT Id, TotalAmount, AccountId FROM Order WHERE status ='Ordered'];
+        // Iterate over each sObject - here Account.
+       for(Account myAccount : accLst){
+           // Reset of the Chiffre d'affaire.
+		   myAccount.Chiffre_d_affaire__c = 0;
+           // Iterate over each sObject - here Order
+           for(Order ord : listOrders){
+               // if the order id number matches the account id number.
+               if(ord.AccountId == myAccount.Id){
+                   // Add the total amount of the new order placed
+                   // (including shipping costs) to the Chiffre d'affaire of the account concerned.
+                   myAccount.Chiffre_d_affaire__c += ord.TotalAmount;
+               }                   
+           }
+           
+           AllAccToUpdate.add(myAccount);
+       }
+       // update of All Accounts.
+       update AllAccToUpdate;
+    }
+}
