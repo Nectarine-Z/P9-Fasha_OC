@@ -52,7 +52,7 @@ public class AP01Account { // handler du trigger Order
             // calculate the net amount of the order (without shipping costs).
                 o.NetAmount__c = o.TotalAmount - o.ShipmentCost__c;
            }     
-    }//test 1
+    }//test 2
     
     public static void updateChiffreAffaire(List<Account> accLst){
         // creation of a new List of all Accounts.
