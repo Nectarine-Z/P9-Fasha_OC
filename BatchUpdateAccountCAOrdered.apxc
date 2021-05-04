@@ -5,13 +5,11 @@
 
 
 global class BatchUpdateAccountCAOrdered implements Database.Batchable<sObject>{
-    //global: Defines a class, method, or variable that can be used by any Apex that
-    //has access to the class.
     
    global Database.QueryLocator start (Database.BatchableContext info){ 
        //Query only accounts that have at least one order with the Status 'Ordered'
        
-       return Database.getQueryLocator('SELECT Id FROM Account');
+       return Database.getQueryLocator('SELECT Id,Chiffre_d_affaire__c FROM Account');
    }
      
    global void execute(Database.BatchableContext info, List<Account> scope){   
