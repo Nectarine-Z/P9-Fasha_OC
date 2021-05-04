@@ -1,0 +1,17 @@
+/**
+ * @author : francoise zimmer
+ * description : Class test for MyTeamOrdersController.
+ * 
+*/
+
+@isTest
+	public class MyTeamOrdersControllerTest {
+       /* order o = 
+       Test.startTest();
+        List<AggregateResult> groupedResults = MyTeamOrdersController.sumOrder();
+        Test.StopTest();
+        system.assertEquals(40000, groupedResults);*/
+        
+        
+        
+}
