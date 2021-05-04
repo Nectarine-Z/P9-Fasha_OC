@@ -1,0 +1,24 @@
+/*
+ * Author: Francoise Zimmer
+ * But : update Account's "chiffre d'affaire" with order status "ordered"
+*/ 
+
+
+global class BatchUpdateAccountCAOrdered implements Database.Batchable<sObject>{
+    //global: Defines a class, method, or variable that can be used by any Apex that
+    //has access to the class.
+    
+   global Database.QueryLocator start (Database.BatchableContext info){ 
+       //Query only accounts that have at least one order with the Status 'Ordered'
+       
+       return Database.getQueryLocator('SELECT Id FROM Account');
+   }
+     
+   global void execute(Database.BatchableContext info, List<Account> scope){   
+       AP01Account.updateChiffreAffaire(scope);
+   }    
+    
+   global void finish(Database.BatchableContext info){
+       System.Debug('Batch has been successfully executed');
+   } 
+}
