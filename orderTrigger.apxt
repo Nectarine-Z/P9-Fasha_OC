@@ -1,0 +1,17 @@
+/*
+* Author: Francoise Zimmer
+* Description : order Trigger, before and after update.
+* Trigger 1 before : to call the net amount calculation class. 
+* Trigger 2 after : to update the Accounts receivable after receiving the orders.
+*/ 
+
+trigger orderTrigger on Order (before update, after update) {
+
+    if (Trigger.isUpdate){
+        if (Trigger.isBefore){ // processing of the trigger before update
+           	AP01Account.updateMontantCommandeSansFraisDeLivraison(trigger.new); 
+        } else if (Trigger.isAfter){ // processing of the trigger after update
+            AP01Account.updateChiffreAffaireDeL_Account(trigger.new);
+        }
+    }
+}
