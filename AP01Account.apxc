@@ -14,47 +14,42 @@ public class AP01Account { // handler du trigger Order
     public static void updateChiffreAffaireDeL_Account(List<Order> orders) {
         Set<Id> AccountOrderId = new Set<ID>();
         for (order o : orders){
-            
-            // alimenter AccounterOrderId
+            AccountOrderId.add(o.Accountid);
         }
-        // Creation of a new Map to collect the Id of the Account in Key and recover its chiffre d'affaire in Value.
-        Map<Id, Account> accMap = new Map<Id, Account>([SELECT id, Chiffre_d_affaire__c FROM Account where id in :AccountOrderId]);// where id in =: orders. ]); // ajouter une clause where
-        // Creation of a new list that will contain the Accounts that have placed a new order.
-        List<Account> accToUpdate = new List<Account>();
-        // Iterate over each sObject - here Order
+
+        List<Account> accToUpdate = new List<Account>();	
         
-        Map<id,Decimal> mapCA = new Map<id,Decimal>(); //where AccountID =: orderAccountId]);
+        Map<id,Account> accMap = new Map<id,Account>([select id, Chiffre_d_affaire__c from account where id in : AccountOrderId]);
         
-        //for ([SELECT AccountId, SUM(TotalAmount)CA FROM Order])
+        AggregateResult[] groupedResults= [SELECT Accountid, SUM(TotalAmount)CA FROM Order where Status = 'Ordered' and AccountId in : AccountOrderId group by AccountId];
         
-        Set<Id> resultIds = (new Map<Id,SObject>(orders)).keySet();
-        AggregateResult[] groupedResults= [SELECT MIN(Accountid)Accid,SUM(TotalAmount)CA FROM Order where id in : resultIds] ;
-        for (AggregateResult a : groupedResults){
-            mapCA.put((id)a.get('Accid'),(Decimal)a.get('CA'));
+        for (AggregateResult r : groupedResults){
+            ID accountID = (id)r.get('AccountID');
+            Account a = accMap.get(accountid);
+            a.Chiffre_d_affaire__c = (Decimal) r.get('CA');
+            accToUpdate.add(a);
         }
-        
-        for (Order o:orders){ 
-            // for orders, whose Account Id is equal to the Order Id, recover the total amount of the order.
-                Id orderAccountId = o.AccountId;
-                Object sumOrder = mapCA.get(orderAccountId);//groupedResults[0].get('CA');
-                Account accountOrder = accMap.get(orderAccountId);
-                accountOrder.Chiffre_d_affaire__c = (Decimal) sumOrder;
-                accToUpdate.add(accountOrder);
-        }
-        // update of the chiffre d'affaire field for Accounts that have placed a new order.
         update accToUpdate;
  }
-    
+    /**Updating orders without shipement costs.
+     * @param : orders. List of orders to be updated.
+     */
     public static void updateMontantCommandeSansFraisDeLivraison(List<Order> orders){
         
         // Iterate over each sObject - here Order
         for (Order o:orders){
             // calculate the net amount of the order (without shipping costs).
+            if (o.ShipmentCost__c != null){
                 o.NetAmount__c = o.TotalAmount - o.ShipmentCost__c;
+            }
            }     
-    }//test 2
+    }
     
+    /**Updating the chiffre d'affaire of all accounts that have received a new order.
+     * @param : AccLst. List of accounts to be updated.
+     */
     public static void updateChiffreAffaire(List<Account> accLst){
+      
         // creation of a new List of all Accounts.
         List<Account> AllAccToUpdate = new List<Account>();
         // creation of a new list of all orders with the status Ordered.
