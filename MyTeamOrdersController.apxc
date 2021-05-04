@@ -1,0 +1,18 @@
+/**
+ * Controller Class for the VisualForce page
+ * @author francoise zimmer
+ */
+ 
+
+public with sharing class MyTeamOrdersController {
+    // sharing rules enforced when code in this class execute.
+    public decimal SumOders{
+        // recover an aggregate object - the total amount of all orders received.
+        get{
+			AggregateResult groupedResults = [SELECT SUM(TotalAmount) total FROM Order WHERE status = 'ordered'];
+			return (decimal)groupedResults.get('total');
+        }
+        set;
+    }
+
+}
